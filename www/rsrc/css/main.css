@@ -51,6 +51,12 @@
     border: 1px solid #bbb;
     cursor: pointer;
     box-sizing: border-box;
+
+    max-width:90%;
+    display:inline-block;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }
 
 #upload:hover, #submit:hover {
