@@ -9,8 +9,11 @@ let send = () => {
         formd.append('name', file[0]);
         
         let xhr = new XMLHttpRequest();
-        xhr.open('post', '/upload');        
+        xhr.open('post', '/upload');
+        xhr.addEventListener('load', e => window.location.href = xhr.responseURL);
         xhr.send(formd);
+
+        console.log(xhr.response);
 
         document.querySelector('#submit').innerHTML = 'それは終わった';
         document.querySelector('#submit').style     = 'border-color:#1EAEDB;';

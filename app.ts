@@ -10,6 +10,27 @@ import form     = require('formidable');
 import mime     = require('mime');
 import express  = require('express');
 
+
+const fixed_date = Date.now();
+const logstream  = fs.createWriteStream(path.join(__dirname + '/logs/'+fixed_date+'.txt'), {flags:'a'});
+const log = (type:string, msg:string): void => {
+    const colorList = {
+        'INFO':'\x1b[32m',
+        'ERROR':'\x1b[41m',
+        'reset':'\x1b[0m'
+    };
+
+    const date  = new Date();
+    const tolog = date.getDay()+'/'+date.getMonth()+'/'+date.getFullYear()+' '+date.getHours()+':'+date.getMinutes()+':'+date.getSeconds()+' ['+type.toUpperCase()+'] ' + msg + '\n';
+    logstream.write(tolog, (err) => {
+        if(err)
+            console.log('['+colorList['ERROR']+'ERROR'+colorList['reset']+ '] ' + err.message)
+        else
+            console.log('['+colorList[type.toUpperCase()]+type.toUpperCase()+colorList['reset']+ '] ' + msg)
+    });
+}
+
+
 class App {
     private port: number;
     private passwd: string;
@@ -54,41 +75,55 @@ class App {
             dom.window.document.querySelector('#list').appendChild(n);
         })
 
+        log('INFO', req.ip + ' GET /gallery/');
         res.send(dom.serialize());
     }
 
     private rsrc_get(req, res): void {
         const filepath: string = path.join(__dirname + '/www/rsrc/'+req.params[0]);
-        if(!fs.existsSync(filepath))
+        if(!fs.existsSync(filepath)) {
+            log('INFO', req.ip + ' GET /404.html');
             res.sendFile(path.join(__dirname + '/www/404.html'));
-        else
+        }   
+        else {
+            log('INFO', req.ip + ' GET /rsrc/'+req.params[0]);
             res.sendFile(filepath);
+        }
     }
 
     private upload_get(req, res): void {
         const filepath: string = path.join(__dirname + '/www/media/'+req.params[0]);
-        if(!fs.existsSync(filepath))
+        if(!fs.existsSync(filepath)) {
+            log('INFO', req.ip + ' GET /404.html');
             res.sendFile(path.join(__dirname + '/www/404.html'));
-        else
+        }
+        else {
+            log('INFO', req.ip + ' GET /media/'+req.params[0]);
             res.sendFile(filepath);
+        }
     }
 
     private upload_post(req, res): void {
         const f = form({multiples:true});
             f.parse(req, (err, fields, file) => {
                 if(err)
-                    console.log(err)
+                    log('ERROR', err)
                 else if(fields.passwd = this.passwd) {
                     file = file[Object.keys(file)[0]];
                     const authorized_extensions: Array<string> = ['jpg','jpeg','png','gif', 'txt'];
                     if(authorized_extensions.includes(mime.getExtension(file.type))) {
-                        const filepath = path.join(__dirname + '/www/media/' + md5(Date.now() + this.salt) + '.' + mime.getExtension(file.type));
+                        const filename  = md5(Date.now() + this.salt) + '.' + mime.getExtension(file.type);
+                        const filepath = path.join(__dirname + '/www/media/' + filename);
                         fs.createReadStream(file.path).pipe(fs.createWriteStream(filepath));
-                        res.send('<script>alert("file uploaded")</script>');
+
+                        log('INFO', req.ip + ' POST /upload ' + filename)
+                        res.redirect('/media/' + filename);
                     }
 
-                    else
+                    else {
+                        console.log('INFO', req.ip + ' POST /upload Tried to access unauthorized');
                         res.send('Not authorized');
+                    }
                 }
             });
     }
@@ -109,7 +144,8 @@ class App {
         // uploading a file
         router.post('/upload/?', (req, res) => this.upload_post(req, res));
 
-        router.listen(this.port, () => console.log('server is now listening'));
+        router.listen(this.port, () => log('INFO', 'Server is now listening on port ' + this.port + ' !'));
+
     }
 }
 

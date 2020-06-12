@@ -10,6 +10,23 @@ var path = require("path");
 var form = require("formidable");
 var mime = require("mime");
 var express = require("express");
+var fixed_date = Date.now();
+var logstream = fs.createWriteStream(path.join(__dirname + '/logs/' + fixed_date + '.txt'), { flags: 'a' });
+var log = function (type, msg) {
+    var colorList = {
+        'INFO': '\x1b[32m',
+        'ERROR': '\x1b[41m',
+        'reset': '\x1b[0m'
+    };
+    var date = new Date();
+    var tolog = date.getDay() + '/' + date.getMonth() + '/' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds() + ' [' + type.toUpperCase() + '] ' + msg + '\n';
+    logstream.write(tolog, function (err) {
+        if (err)
+            console.log('[' + colorList['ERROR'] + 'ERROR' + colorList['reset'] + '] ' + err.message);
+        else
+            console.log('[' + colorList[type.toUpperCase()] + type.toUpperCase() + colorList['reset'] + '] ' + msg);
+    });
+};
 var App = /** @class */ (function () {
     function App(port) {
         this.port = port;
@@ -41,38 +58,51 @@ var App = /** @class */ (function () {
             n.innerHTML = '<a href="/media/' + file + '">' + file + '</a>';
             dom.window.document.querySelector('#list').appendChild(n);
         });
+        log('INFO', req.ip + ' GET /gallery/');
         res.send(dom.serialize());
     };
     App.prototype.rsrc_get = function (req, res) {
         var filepath = path.join(__dirname + '/www/rsrc/' + req.params[0]);
-        if (!fs.existsSync(filepath))
+        if (!fs.existsSync(filepath)) {
+            log('INFO', req.ip + ' GET /404.html');
             res.sendFile(path.join(__dirname + '/www/404.html'));
-        else
+        }
+        else {
+            log('INFO', req.ip + ' GET /rsrc/' + req.params[0]);
             res.sendFile(filepath);
+        }
     };
     App.prototype.upload_get = function (req, res) {
         var filepath = path.join(__dirname + '/www/media/' + req.params[0]);
-        if (!fs.existsSync(filepath))
+        if (!fs.existsSync(filepath)) {
+            log('INFO', req.ip + ' GET /404.html');
             res.sendFile(path.join(__dirname + '/www/404.html'));
-        else
+        }
+        else {
+            log('INFO', req.ip + ' GET /media/' + req.params[0]);
             res.sendFile(filepath);
+        }
     };
     App.prototype.upload_post = function (req, res) {
         var _this = this;
         var f = form({ multiples: true });
         f.parse(req, function (err, fields, file) {
             if (err)
-                console.log(err);
+                log('ERROR', err);
             else if (fields.passwd = _this.passwd) {
                 file = file[Object.keys(file)[0]];
                 var authorized_extensions = ['jpg', 'jpeg', 'png', 'gif', 'txt'];
                 if (authorized_extensions.includes(mime.getExtension(file.type))) {
-                    var filepath = path.join(__dirname + '/www/media/' + md5(Date.now() + _this.salt) + '.' + mime.getExtension(file.type));
+                    var filename = md5(Date.now() + _this.salt) + '.' + mime.getExtension(file.type);
+                    var filepath = path.join(__dirname + '/www/media/' + filename);
                     fs.createReadStream(file.path).pipe(fs.createWriteStream(filepath));
-                    res.send('<script>alert("file uploaded")</script>');
+                    log('INFO', req.ip + ' POST /upload ' + filename);
+                    res.redirect('/media/' + filename);
                 }
-                else
+                else {
+                    console.log('INFO', req.ip + ' POST /upload Tried to access unauthorized');
                     res.send('Not authorized');
+                }
             }
         });
     };
@@ -92,7 +122,7 @@ var App = /** @class */ (function () {
         router.get('/media/*', function (req, res) { return _this.upload_get(req, res); });
         // uploading a file
         router.post('/upload/?', function (req, res) { return _this.upload_post(req, res); });
-        router.listen(this.port, function () { return console.log('server is now listening'); });
+        router.listen(this.port, function () { return log('INFO', 'Server is now listening on port ' + _this.port + ' !'); });
     };
     return App;
 }());
