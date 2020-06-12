@@ -4,6 +4,7 @@
  */
 exports.__esModule = true;
 var fs = require("fs");
+var du = require("du");
 var jsdom = require("jsdom");
 var md5 = require("md5");
 var path = require("path");
@@ -106,6 +107,22 @@ var App = /** @class */ (function () {
             }
         });
     };
+    App.prototype.watchdir = function (dirpath, maxsize) {
+        du(path.join(__dirname + dirpath), function (err, size) {
+            if (size >= maxsize) {
+                fs.readdir(path.join(__dirname + dirpath), function (err, files) {
+                    if (err)
+                        log('ERROR', err.message);
+                    else {
+                        for (var _i = 0, files_1 = files; _i < files_1.length; _i++) {
+                            var file = files_1[_i];
+                            fs.unlink(path.join(__dirname + dirpath + file), function (err) { return log('ERROR', err.message); });
+                        }
+                    }
+                });
+            }
+        });
+    };
     /**
      * Here is the main ! The router is implemented differently for each allowed routes
      */
@@ -123,6 +140,11 @@ var App = /** @class */ (function () {
         // uploading a file
         router.post('/upload/?', function (req, res) { return _this.upload_post(req, res); });
         router.listen(this.port, function () { return log('INFO', 'Server is now listening on port ' + _this.port + ' !'); });
+        // watch a given directory, see if its size is under the threshold, if not delete all files
+        setInterval(function () {
+            // 1 go
+            _this.watchdir('/www/media/', Math.pow(10, 9));
+        }, 1000);
     };
     return App;
 }());
