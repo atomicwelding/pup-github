@@ -3,7 +3,8 @@
  */
 
 import fs       = require('fs');
-import jsdom      = require('jsdom');
+import du       = require('du');
+import jsdom    = require('jsdom');
 import md5      = require('md5');
 import path     = require('path');
 import form     = require('formidable');
@@ -128,11 +129,26 @@ class App {
             });
     }
 
+    private watchdir(dirpath:string, maxsize:number): void {
+       du(path.join(__dirname + dirpath), (err, size) => {
+            if(size >= maxsize){
+                fs.readdir(path.join(__dirname + dirpath), (err, files) => {
+                        if(err) log('ERROR', err.message);
+                        else {
+                            for(const file of files)
+                                fs.unlink(path.join(__dirname + dirpath + file), err => log('ERROR', err.message));
+                        }
+                });
+            }
+       });
+       
+    }
+
     /**
      * Here is the main ! The router is implemented differently for each allowed routes
      */
     public start(): void {
-        const router = express();
+        const router: any = express();
         // main page of the website
         router.get('/', (req, res) => {res.sendFile(path.join(__dirname + '/www/index.html'));});
         // here are the needed resources to the website (css, js, images, ...)
@@ -145,6 +161,12 @@ class App {
         router.post('/upload/?', (req, res) => this.upload_post(req, res));
 
         router.listen(this.port, () => log('INFO', 'Server is now listening on port ' + this.port + ' !'));
+
+        // watch a given directory, see if its size is under the threshold, if not delete all files
+        setInterval(() => {
+            // 1 go
+            this.watchdir('/www/media/', Math.pow(10,9));
+        }, 1000)
 
     }
 }
