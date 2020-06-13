@@ -31,7 +31,7 @@ var log = function (type, msg) {
 var App = /** @class */ (function () {
     function App(port) {
         this.params = this.init_params();
-        this.salt = 'ornythorinque';
+        this.salt = '***';
     }
     App.prototype.init_params = function () {
         var file = fs.readFileSync('pup.conf');
@@ -94,7 +94,7 @@ var App = /** @class */ (function () {
         f.parse(req, function (err, fields, file) {
             if (err)
                 log('ERROR', err);
-            else if (fields.passwd = _this.params.passwd) {
+            else if (fields.passwd == _this.params.passwd) {
                 file = file[Object.keys(file)[0]];
                 var authorized_extensions = ['jpg', 'jpeg', 'png', 'gif', 'txt'];
                 if (authorized_extensions.includes(mime.getExtension(file.type))) {

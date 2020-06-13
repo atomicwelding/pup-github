@@ -37,7 +37,7 @@ class App {
     private params: any;
     private constructor(port: number) {
         this.params = this.init_params();
-        this.salt = '***';
+        this.salt = 'luvcutetraps';
     }
 
     private init_params(): Array<any> {
