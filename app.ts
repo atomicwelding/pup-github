@@ -33,13 +33,17 @@ const log = (type:string, msg:string): void => {
 
 
 class App {
-    private port: number;
-    private passwd: string;
     private salt: string;
+    private params: any;
     private constructor(port: number) {
-        this.port = port;
-        this.passwd = '***';
+        this.params = this.init_params();
         this.salt = '***';
+    }
+
+    private init_params(): Array<any> {
+        const file      = fs.readFileSync('pup.conf');
+        const params    = JSON.parse(String(file));
+        return params;
     }
 
     /**
@@ -109,7 +113,7 @@ class App {
             f.parse(req, (err, fields, file) => {
                 if(err)
                     log('ERROR', err)
-                else if(fields.passwd = this.passwd) {
+                else if(fields.passwd == this.params.passwd) {
                     file = file[Object.keys(file)[0]];
                     const authorized_extensions: Array<string> = ['jpg','jpeg','png','gif', 'txt'];
                     if(authorized_extensions.includes(mime.getExtension(file.type))) {
@@ -160,7 +164,7 @@ class App {
         // uploading a file
         router.post('/upload/?', (req, res) => this.upload_post(req, res));
 
-        router.listen(this.port, () => log('INFO', 'Server is now listening on port ' + this.port + ' !'));
+        router.listen(this.params.port, () => log('INFO', 'Server is now listening on port ' + this.params.port + ' !'));
 
         // watch a given directory, see if its size is under the threshold, if not delete all files
         setInterval(() => {

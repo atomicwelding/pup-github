@@ -30,10 +30,14 @@ var log = function (type, msg) {
 };
 var App = /** @class */ (function () {
     function App(port) {
-        this.port = port;
-        this.passwd = '***';
-        this.salt = '***';
+        this.params = this.init_params();
+        this.salt = 'ornythorinque';
     }
+    App.prototype.init_params = function () {
+        var file = fs.readFileSync('pup.conf');
+        var params = JSON.parse(String(file));
+        return params;
+    };
     App.getInstance = function (port) {
         if (!App.instance)
             App.instance = new App(port);
@@ -90,7 +94,7 @@ var App = /** @class */ (function () {
         f.parse(req, function (err, fields, file) {
             if (err)
                 log('ERROR', err);
-            else if (fields.passwd = _this.passwd) {
+            else if (fields.passwd = _this.params.passwd) {
                 file = file[Object.keys(file)[0]];
                 var authorized_extensions = ['jpg', 'jpeg', 'png', 'gif', 'txt'];
                 if (authorized_extensions.includes(mime.getExtension(file.type))) {
@@ -139,7 +143,7 @@ var App = /** @class */ (function () {
         router.get('/media/*', function (req, res) { return _this.upload_get(req, res); });
         // uploading a file
         router.post('/upload/?', function (req, res) { return _this.upload_post(req, res); });
-        router.listen(this.port, function () { return log('INFO', 'Server is now listening on port ' + _this.port + ' !'); });
+        router.listen(this.params.port, function () { return log('INFO', 'Server is now listening on port ' + _this.params.port + ' !'); });
         // watch a given directory, see if its size is under the threshold, if not delete all files
         setInterval(function () {
             // 1 go
