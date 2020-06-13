@@ -31,7 +31,7 @@ var log = function (type, msg) {
 var App = /** @class */ (function () {
     function App(port) {
         this.params = this.init_params();
-        this.salt = '***';
+        this.salt = 'luvcutetraps';
     }
     App.prototype.init_params = function () {
         var file = fs.readFileSync('pup.conf');
