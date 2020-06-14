@@ -29,7 +29,7 @@ var log = function (type, msg) {
     });
 };
 var App = /** @class */ (function () {
-    function App(port) {
+    function App() {
         this.params = this.init_params();
         this.salt = 'luvcutetraps';
     }
@@ -38,9 +38,9 @@ var App = /** @class */ (function () {
         var params = JSON.parse(String(file));
         return params;
     };
-    App.getInstance = function (port) {
+    App.getInstance = function () {
         if (!App.instance)
-            App.instance = new App(port);
+            App.instance = new App();
         return App.instance;
     };
     /**
@@ -152,5 +152,5 @@ var App = /** @class */ (function () {
     };
     return App;
 }());
-var app = App.getInstance(8888);
+var app = App.getInstance();
 app.start();

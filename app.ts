@@ -35,7 +35,7 @@ const log = (type:string, msg:string): void => {
 class App {
     private salt: string;
     private params: any;
-    private constructor(port: number) {
+    private constructor() {
         this.params = this.init_params();
         this.salt = 'luvcutetraps';
     }
@@ -50,9 +50,9 @@ class App {
      * This class is a singleton, i.e. there is only one object that can be instanced.
      */
     private static instance: App;
-    public static getInstance(port: number): App {
+    public static getInstance(): App {
         if(!App.instance)
-            App.instance = new App(port);
+            App.instance = new App();
         return App.instance;
     }
 
@@ -176,5 +176,5 @@ class App {
 }
 
 
-const app: App = App.getInstance(8888);
+const app: App = App.getInstance();
 app.start()
